@@ -1,0 +1,2 @@
+function r(t){return new Promise(o=>{if(!t){o();return}t.forEach(e=>{e.hasAttribute("data-src")&&(e.setAttribute("src",`${e.getAttribute("data-src")}`),e.removeAttribute("data-src"),e.classList.contains("deckgo-reveal")||e.style.setProperty("visibility","inherit")),e.style.setProperty("pointer-events","none")}),o()})}var s=async t=>{let o=t.map(e=>e.lazyLoad());await Promise.all(o)};export{r as a,s as b};
+//# sourceMappingURL=chunk-HCIHXSOP.js.map

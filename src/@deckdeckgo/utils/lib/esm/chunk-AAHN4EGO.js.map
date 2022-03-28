@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/editable.utils.ts"],
+  "sourcesContent": ["export const catchTab = ($event: KeyboardEvent) => {\n  if ($event?.key === 'Tab') {\n    $event.preventDefault();\n\n    document.execCommand('insertHTML', false, '&#009');\n  }\n};\n"],
+  "mappings": "AAAO,GAAM,GAAW,AAAC,GAA0B,CACjD,AAAI,GAAQ,MAAQ,OAClB,GAAO,iBAEP,SAAS,YAAY,aAAc,GAAO",
+  "names": []
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@papyrs/cdn",
+  "version": "0.0.1",
+  "description": "A cdn for Papyrs",
+  "scripts": {
+    "copy": "cp -r node_modules/** ./src/"
+  },
+  "author": "David Dal Busco",
+  "dependencies": {
+    "@deckdeckgo/highlight-code": "^4.2.0",
+    "@deckdeckgo/lazy-img": "^3.3.0",
+    "prismjs": "^1.27.0"
+  }
+}
