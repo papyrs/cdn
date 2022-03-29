@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "A cdn for Papyrs",
   "scripts": {
-    "clean": "rm -r ./src/prismjs/plugins && find ./src/prismjs/components/ -type f ! -name '*.min.js' -delete",
+    "clean:prism:js": "find ./src/libs/prismjs/1.27.0/components -type f ! -name '*.min.js' -delete",
+    "clean:prism:css": "find ./src/libs/prismjs/1.27.0/themes -type f ! -name '*.min.css' -delete",
     "build": ""
   },
   "author": "David Dal Busco",
