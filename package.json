@@ -4,7 +4,7 @@
   "description": "A cdn for Papyrs",
   "scripts": {
     "clean": "rm -r ./src/prismjs/plugins && find ./src/prismjs/components/ -type f ! -name '*.min.js' -delete",
-    "copy": "cp -r node_modules/** ./src/"
+    "build": ""
   },
   "author": "David Dal Busco",
   "dependencies": {
