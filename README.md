@@ -1,6 +1,11 @@
 # Papyrs - CDN
 
-A CDN for Papyrs that contains libraries loaded as ES modules with script tags.
+A CDN for Papyrs.
+
+## Content
+
+- libraries that are loaded as ES modules with script tags
+- fonts
 
 ## License
 
