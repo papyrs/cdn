@@ -9,7 +9,7 @@
   },
   "author": "David Dal Busco",
   "dependencies": {
-    "@deckdeckgo/highlight-code": "^4.2.0",
+    "@deckdeckgo/highlight-code": "^4.3.0",
     "@deckdeckgo/lazy-img": "^3.3.0",
     "prismjs": "^1.27.0"
   }
