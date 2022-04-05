@@ -5,7 +5,7 @@ A CDN for Papyrs.
 ## Content
 
 - libraries that are loaded as ES modules with script tags
-- fonts
+- assets: fonts, icons and social image
 
 ## Hosting
 

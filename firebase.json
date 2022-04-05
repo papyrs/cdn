@@ -8,7 +8,7 @@
     ],
     "headers": [
       {
-        "source": "fonts/*",
+        "source": "assets/**/*",
         "headers": [
           {
             "key": "Access-Control-Allow-Origin",
