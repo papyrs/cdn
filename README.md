@@ -7,6 +7,12 @@ A CDN for Papyrs.
 - libraries that are loaded as ES modules with script tags
 - fonts
 
+## Hosting
+
+CDN is currently hosted on [Google Firebase](https://firebase.google.com).
+
+Ultimately it will be hosted on the IC.
+
 ## License
 
 The library and font licenses are authoritative - the libraries are published under MIT license and the fonts under the [Open Font License](https://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL).
