@@ -10,7 +10,7 @@
   "author": "David Dal Busco",
   "dependencies": {
     "@deckdeckgo/highlight-code": "^4.3.0",
-    "@deckdeckgo/lazy-img": "^3.3.0",
+    "@deckdeckgo/lazy-img": "^3.4.0",
     "@deckdeckgo/monaco-editor": "^1.4.0",
     "@papyrs/ic": "^0.0.8",
     "jszip": "^3.9.0",
