@@ -1,0 +1,1 @@
+import{p as i,b as s}from"./p-06121d8f.js";(()=>{const s=import.meta.url,a={};return""!==s&&(a.resourcesUrl=new URL(".",s).href),i(a)})().then((i=>s([["p-1a6d04d5",[[0,"what-is-ii",{language:[1],assetsDir:[1,"assets-dir"]}],[2,"what-is-ii-anchor",{imageSrc:[32]}],[2,"what-is-ii-hero"],[2,"what-is-ii-requirements"]]]],i)));
