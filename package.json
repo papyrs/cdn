@@ -12,6 +12,7 @@
     "@deckdeckgo/highlight-code": "^4.3.0",
     "@deckdeckgo/lazy-img": "^3.4.0",
     "@deckdeckgo/monaco-editor": "^1.4.0",
+    "@excalidraw/excalidraw": "^0.11.0",
     "@papyrs/ic": "^0.0.11",
     "@papyrs/what-is-internet-identity": "^0.0.2",
     "jszip": "^3.9.0",
