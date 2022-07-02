@@ -1,0 +1,1 @@
+import{p as e,b as o}from"./p-ba46f6e6.js";(()=>{const o=import.meta.url,r={};return""!==o&&(r.resourcesUrl=new URL(".",o).href),e(r)})().then((e=>o([["p-5cffebf7",[[0,"deckgo-excalidraw",{scene:[16],toBlob:[64],exportScene:[64]}]]]],e)));
