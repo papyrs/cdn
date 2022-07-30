@@ -1,0 +1,1 @@
+import{p as s,b as r}from"./p-4924e4d9.js";(()=>{const r=import.meta.url,a={};return""!==r&&(a.resourcesUrl=new URL(".",r).href),s(a)})().then((s=>r([["p-ca41f057",[[1,"web-social-share",{show:[1028],share:[16]}]]]],s)));
