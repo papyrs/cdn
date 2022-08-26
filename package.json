@@ -14,7 +14,7 @@
     "@deckdeckgo/lazy-img": "^3.4.0",
     "@deckdeckgo/monaco-editor": "^1.4.1",
     "@excalidraw/excalidraw": "^0.11.0",
-    "@papyrs/ic": "^0.0.18",
+    "@papyrs/ic": "^0.0.19",
     "@papyrs/what-is-internet-identity": "^0.0.2",
     "jszip": "^3.9.0",
     "prismjs": "^1.27.0",
