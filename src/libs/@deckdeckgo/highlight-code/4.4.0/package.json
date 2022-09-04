@@ -1,0 +1,58 @@
+{
+  "name": "@deckdeckgo/highlight-code",
+  "version": "4.4.0",
+  "description": "A Web Component to highlight your code",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.js",
+  "es2015": "dist/esm/index.js",
+  "es2017": "dist/esm/index.js",
+  "jsnext:main": "dist/esm/index.js",
+  "types": "dist/types/interface.d.ts",
+  "collection": "dist/collection/collection-manifest.json",
+  "collection:main": "dist/collection/index.js",
+  "unpkg": "dist/deckdeckgo-highlight-code/deckdeckgo-highlight-code.esm.js",
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "config": "node scripts/config.languages.mjs && prettier --write src/declarations/languages.ts",
+    "build": "npm run config && stencil build --docs",
+    "start": "npm run config && stencil build --dev --watch --serve",
+    "test": "npm run config && stencil test --spec --e2e",
+    "test.watch": "npm run config && stencil test --spec --e2e --watchAll"
+  },
+  "dependencies": {
+    "@deckdeckgo/utils": "^5.1.0",
+    "prismjs": "^1.27.0"
+  },
+  "devDependencies": {
+    "@deckdeckgo/slide-utils": "^4.0.3",
+    "@types/prismjs": "^1.26.0",
+    "node-fetch": "^3.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deckgo/deckdeckgo.git",
+    "directory": "webcomponents/highlight-code"
+  },
+  "author": "David Dal Busco",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/deckgo/deckdeckgo"
+  },
+  "homepage": "https://deckdeckgo.com",
+  "keywords": [
+    "stencil",
+    "stenciljs",
+    "web components",
+    "pwa",
+    "progressive web app",
+    "presentation",
+    "slides",
+    "slideshow",
+    "talk",
+    "prismjs"
+  ]
+}
