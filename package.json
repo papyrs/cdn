@@ -18,6 +18,6 @@
     "@papyrs/what-is-internet-identity": "^0.0.3",
     "jszip": "^3.9.0",
     "prismjs": "^1.27.0",
-    "web-social-share": "^9.0.0"
+    "web-social-share": "^9.1.0"
   }
 }

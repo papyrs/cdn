@@ -1,0 +1,61 @@
+{
+  "name": "web-social-share",
+  "version": "9.1.0",
+  "description": "A Web Component to share urls and text on social networks",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.js",
+  "es2015": "dist/esm/index.js",
+  "es2017": "dist/esm/index.js",
+  "jsnext:main": "dist/esm/index.js",
+  "types": "dist/types/components.d.ts",
+  "collection": "dist/collection/collection-manifest.json",
+  "collection:main": "dist/collection/index.js",
+  "unpkg": "dist/websocialshare/websocialshare.esm.js",
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "stencil build --docs",
+    "start": "stencil build --dev --watch --serve",
+    "web": "stencil build",
+    "format": "prettier . --write",
+    "format:md": "prettier \"src/**/*.md\" --write"
+  },
+  "devDependencies": {
+    "@stencil/core": "^2.17.4",
+    "@stencil/postcss": "^2.1.0",
+    "@stencil/sass": "^1.5.2",
+    "autoprefixer": "^10.4.8",
+    "prettier": "^2.7.1",
+    "prettier-plugin-organize-imports": "^3.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peterpeterparker/web-social-share.git"
+  },
+  "author": "David Dal Busco",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/peterpeterparker/web-social-share"
+  },
+  "homepage": "https://websocialshare.com",
+  "keywords": [
+    "social",
+    "share",
+    "facebook",
+    "instagram",
+    "twitter",
+    "whatsapp",
+    "reddit",
+    "pinterest",
+    "pwa",
+    "progressive-web-app",
+    "progressive-web-apps",
+    "stenciljs",
+    "stencil",
+    "hacker-news",
+    "copy-paste"
+  ]
+}
