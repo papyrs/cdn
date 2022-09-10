@@ -1,0 +1,1 @@
+const a=(a,e)=>e instanceof Map?{dataType:"Map",value:Array.from(e.entries())}:e,e=(a,e)=>"object"==typeof e&&null!==e&&"Map"===e.dataType?new Map(e.value):e;export{e as a,a as j}
