@@ -1,0 +1,60 @@
+{
+  "name": "@papyrs/ic",
+  "version": "0.0.24",
+  "description": "The Internet Computer providers of Papyrs",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.js",
+  "es2015": "dist/esm/index.js",
+  "es2017": "dist/esm/index.js",
+  "jsnext:main": "dist/esm/index.js",
+  "types": "dist/types/interface.d.ts",
+  "collection": "dist/collection/collection-manifest.json",
+  "collection:main": "dist/collection/index.js",
+  "unpkg": "dist/papyrs-ic/papyrs-ic.esm.js",
+  "files": [
+    "dist/",
+    "README.md",
+    "COPYING",
+    "LICENSE.md"
+  ],
+  "scripts": {
+    "build": "stencil build",
+    "start": "stencil build --dev --watch --serve",
+    "test": "stencil test --spec --e2e",
+    "test.watch": "stencil test --spec --e2e --watchAll",
+    "format": "prettier . --write"
+  },
+  "devDependencies": {
+    "@deckdeckgo/lazy-img": "^3.4.0",
+    "@deckdeckgo/slide-chart": "^2.5.0",
+    "rollup-plugin-node-polyfills": "^0.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/papyrs/ic.git",
+    "directory": "providers/ic"
+  },
+  "author": "David Dal Busco",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/papyrs/ic"
+  },
+  "homepage": "https://papy.rs",
+  "keywords": [
+    "blog",
+    "blogging",
+    "journalism",
+    "internet-computer"
+  ],
+  "dependencies": {
+    "@deckdeckgo/editor": "^8.2.0",
+    "@dfinity/agent": "^1.0.0-beta.0",
+    "@dfinity/auth-client": "^1.0.0-beta.0",
+    "@dfinity/authentication": "^1.0.0-beta.0",
+    "@dfinity/candid": "^1.0.0-beta.0",
+    "@dfinity/identity": "^1.0.0-beta.0",
+    "@dfinity/principal": "^1.0.0-beta.0",
+    "idb-keyval": "^6.2.0",
+    "nanoid": "^4.0.0"
+  }
+}
