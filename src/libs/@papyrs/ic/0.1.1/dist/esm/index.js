@@ -1,11 +1,11 @@
-import { g as getDataBucket, a as getStorageBucket, t as toNullable, f as fromArray, b as fromNullable, c as toArray, d as createActor, E as EnvStore } from './auth.constants-df89d2cd.js';
-import { g as getIdentity, t, c as createWorkerProxy, i as isAuthenticated } from './auth.providers-b4c31f87.js';
-export { d as deleteAuth, g as getIdentity, a as initAuth, i as isAuthenticated, b as signIn, s as signOut } from './auth.providers-b4c31f87.js';
-import { u as update, d as del, g as get, s as set, I as IdbStorage, i as isDelegationValid, D as DelegationChain } from './compat-2f0363f0.js';
-import './actor-bbf3ae7b.js';
-import './index-89ae1430.js';
+import { g as getDataBucket, a as getStorageBucket, t as toNullable, f as fromArray, b as fromNullable, c as toArray, d as createActor, E as EnvStore, i as idlFactory$1 } from './auth.constants-2a5a6112.js';
+import { g as getIdentity, t, I as IdbStorage, c as createWorkerProxy, i as isAuthenticated, a as isDelegationValid } from './auth.providers-c7bd6728.js';
+export { e as deleteAuth, g as getIdentity, b as initAuth, i as isAuthenticated, d as signIn, s as signOut } from './auth.providers-c7bd6728.js';
+import { u as update, g as get, s as set, D as DelegationChain } from './compat-605a1ac2.js';
+import './actor-676fbee4.js';
+import './index-ec2f5921.js';
 
-var d=["id","hydrated","contenteditable","editable","spellcheck","highlighted","custom-loader","class","placeholder","data-gramm","data-gramm_id","data-gramm_editor","data-gr-id"],c=["paragraph_id","data-src",...d],m=({node:e,deep:r=!0,attributes:t=d})=>{if(i(e))return e;if(s$1(e)){let o=e.cloneNode(r);l({element:o,attributes:t});let a=o.querySelectorAll(t.map(n=>`[${n}]`).join(","));for(let n of Array.from(a))l({element:n,attributes:t});return o}return null},l=({element:e,attributes:r})=>{for(let t of r)e.removeAttribute(t);},i=e=>e?.nodeType===Node.TEXT_NODE||e?.nodeType===Node.COMMENT_NODE,s$1=e=>e?.nodeType===Node.ELEMENT_NODE;
+var d=["id","hydrated","contenteditable","editable","spellcheck","highlighted","custom-loader","class","placeholder","data-gramm","data-gramm_id","data-gramm_editor","data-gr-id","data-selectable-paragraph"],c=["paragraph_id","data-src",...d],m=({node:e,deep:r=!0,attributes:t=d})=>{if(i(e))return e;if(s$1(e)){let o=e.cloneNode(r);a({element:o,attributes:t});let l=o.querySelectorAll(t.map(n=>`[${n}]`).join(","));for(let n of Array.from(l))a({element:n,attributes:t});return o}return null},a=({element:e,attributes:r})=>{for(let t of r)e.removeAttribute(t);},i=e=>e?.nodeType===Node.TEXT_NODE||e?.nodeType===Node.COMMENT_NODE,s$1=e=>e?.nodeType===Node.ELEMENT_NODE;
 
 var n$1="app-deck-editor > ion-content div.deck > main > deckgo-deck";
 
@@ -75,13 +75,7 @@ const fromData = async ({ data, identity }) => {
 };
 const deleteData$1 = async ({ key, actor, data }) => {
   const dataActor = actor || (await getDataActor());
-  // TODO: deprecated - backwards compatibility - to be removed
-  if (!data) {
-    await dataActor.del(key);
-  }
-  else {
-    await dataActor.delete(key, data);
-  }
+  await dataActor.delete(key, data);
 };
 const getData$1 = async ({ key, actor }) => {
   const dataActor = actor || (await getDataActor());
@@ -116,17 +110,26 @@ const setData$2 = async ({ key, record, actor = undefined }) => {
     updated_at: updatedData.updated_at
   };
 };
-const getDataActor = async () => {
+const getDataBucketActor = async () => {
   const identity = getIdentity();
   if (!identity) {
     throw new Error('No internet identity.');
   }
-  const { actor } = await getDataBucket({
+  const result = await getDataBucket({
     identity
   });
+  const { actor, bucketId } = result;
   if (!actor) {
     throw new Error('No actor initialized.');
   }
+  // That would be strange
+  if (!bucketId) {
+    throw new Error('No bucket principal defined');
+  }
+  return result;
+};
+const getDataActor = async () => {
+  const { actor } = await getDataBucketActor();
   return actor;
 };
 
@@ -149,18 +152,13 @@ const setData$1 = async ({ key, record, updateTimestamps = false, actor = undefi
   return updatedEntity;
 };
 const deleteData = async ({ key, actor, log, data }) => {
-  if (!key) {
+  if (!key || !data) {
     // Should never happen but, you never know
     return;
   }
   log === null || log === void 0 ? void 0 : log({ msg: `[delete][start] ${key}`, level: 'info' });
   const t0 = performance.now();
   await deleteData$1({ key, actor, data });
-  // TODO: remove once deprecated code will be removed too
-  if (data !== undefined) {
-    // Paragraph has been deleted in the cloud, we can delete the local record
-    await del(key);
-  }
   const t1 = performance.now();
   log === null || log === void 0 ? void 0 : log({ msg: `[delete][done] ${key}`, duration: t1 - t0, level: 'info' });
 };
@@ -394,7 +392,7 @@ const updateMetaFeed = async ({ key, entry }) => {
     updated_at: currentRecord.updated_at
   };
   const updatedData = await setData$1({
-    key: `/docs/${id}`,
+    key: `/${key}/${id}`,
     record: entityToUpdate,
     updateTimestamps: true
   });
@@ -409,37 +407,158 @@ const emitSubmitted = ({ data, type }) => {
   document.dispatchEvent($event);
 };
 
+const listInteractions = async ({ key, ids }) => {
+  const identity = getIdentity();
+  if (!identity) {
+    throw new Error('No internet identity to get the count of interactions');
+  }
+  const { actor: { listInteractions } } = await getDataBucket({
+    identity
+  });
+  const prefix = `/${key}/`;
+  const interactions = await listInteractions(ids.map((id) => `${prefix}${id}`));
+  const convert = async (value) => {
+    const { countLikes, like, countComments } = value[1];
+    const nullableLikeDid = fromNullable(like);
+    const interaction = {
+      countLikes,
+      like: nullableLikeDid !== undefined ? await toInteraction(nullableLikeDid) : undefined,
+      countComments
+    };
+    return {
+      [value[0].replace(prefix, '')]: interaction
+    };
+  };
+  const convertedInteractions = await Promise.all(interactions.map((interaction) => convert(interaction)));
+  return convertedInteractions.reduce((acc, value) => (Object.assign(Object.assign({}, acc), value)), {});
+};
+const toInteraction = async (interaction) => {
+  const data = await fromArray(interaction.data);
+  return {
+    id: interaction.id,
+    data,
+    created_at: interaction.created_at,
+    updated_at: interaction.updated_at,
+    author_id: interaction.author.toText()
+  };
+};
+const initLikePut = async ({ like, identity, key, id }) => {
+  const now = new Date();
+  const updateLike = like === undefined
+    ? {
+      id: nanoid(),
+      data: {
+        like: true,
+        created_at: now,
+        updated_at: now
+      },
+      author_id: identity.getPrincipal().toText()
+    }
+    : Object.assign(Object.assign({}, like), { data: Object.assign(Object.assign({}, like.data), { like: !like.data.like }) });
+  const { id: likeId, data, created_at, updated_at } = updateLike;
+  return {
+    putKey: likeKey({ key, id, identity }),
+    putInteraction: {
+      id: likeId,
+      data: await toArray(data),
+      author: identity.getPrincipal(),
+      created_at: toNullable(created_at),
+      updated_at: toNullable(updated_at)
+    }
+  };
+};
+const likeKey = ({ key, id, identity }) => `/${key}/${id}/likes/${identity.getPrincipal().toText()}`;
+const putInteraction = async ({ key, id, interaction }) => {
+  const identity = getIdentity();
+  if (!identity) {
+    throw new Error('No internet identity to save the interaction');
+  }
+  const { actor: { putInteraction: putInteractionApi } } = await getDataBucket({
+    identity
+  });
+  // TODO: type === "comment" ? initComment : initLike
+  const { putKey, putInteraction } = await initLikePut({ key, id, like: interaction, identity });
+  const updatedInteraction = await putInteractionApi(putKey, putInteraction);
+  return toInteraction(updatedInteraction);
+};
+
+/**
+ * Create data actor without creating the bucket itself - useful for public access on the blog
+ */
+const createDataActor = ({ identity, canisterId }) => createActor({
+  canisterId,
+  idlFactory: idlFactory$1,
+  identity
+});
+
+const countLikes = async ({ key, id, canisterId }) => {
+  const identity = getIdentity();
+  const { countLikes } = await createDataActor({
+    identity,
+    canisterId
+  });
+  return countLikes(`/${key}/${id}`);
+};
+const getLike = async ({ key, id, canisterId }) => {
+  const identity = getIdentity();
+  // If not signed in we do not throw an error but ignore the request
+  if (!identity) {
+    return undefined;
+  }
+  const { getLike } = await createDataActor({
+    identity,
+    canisterId
+  });
+  const interaction = fromNullable(await getLike(likeKey({ key, id, identity })));
+  if (!interaction) {
+    return undefined;
+  }
+  return toInteraction(interaction);
+};
+const likeDislike = async ({ key, id, like, canisterId }) => {
+  const identity = getIdentity();
+  if (!identity) {
+    throw new Error('No internet identity to record the like');
+  }
+  const { putInteraction: putInteractionApi } = await createDataActor({
+    identity,
+    canisterId
+  });
+  const { putKey, putInteraction } = await initLikePut({ key, id, like, identity });
+  const updatedInteraction = await putInteractionApi(putKey, putInteraction);
+  return toInteraction(updatedInteraction);
+};
+
 const upload = async ({ data, filename, folder, storageActor, headers, token, fullPath: storagePath, log, sha256 }) => {
   log({ msg: `[upload][start] ${filename}`, level: 'info' });
   const t0 = performance.now();
   const fullPath = storagePath || `/${folder}/${filename}`;
-  const { batchId } = await storageActor.initUpload({
+  const { batch_id: batchId } = await storageActor.initUpload({
     name: filename,
-    fullPath,
+    full_path: fullPath,
     token: toNullable(token),
     folder,
     sha256: toNullable(sha256)
   });
   const t1 = performance.now();
   log({ msg: `[upload][create batch] ${filename}`, duration: t1 - t0, level: 'info' });
-  const promises = [];
   const chunkSize = 700000;
+  const chunkIds = [];
   // Prevent transforming chunk to arrayBuffer error: The requested file could not be read, typically due to permission problems that have occurred after a reference to a file was acquired.
   const clone = new Blob([await data.arrayBuffer()]);
   for (let start = 0; start < clone.size; start += chunkSize) {
     const chunk = clone.slice(start, start + chunkSize);
-    promises.push(uploadChunk({
+    chunkIds.push(await uploadChunk({
       batchId,
       chunk,
       storageActor
     }));
   }
-  const chunkIds = await Promise.all(promises);
   const t2 = performance.now();
   log({ msg: `[upload][chunks] ${filename}`, duration: t2 - t1, level: 'info' });
   await storageActor.commitUpload({
-    batchId,
-    chunkIds: chunkIds.map(({ chunkId }) => chunkId),
+    batch_id: batchId,
+    chunk_ids: chunkIds.map(({ chunk_id }) => chunk_id),
     headers: [['Content-Type', data.type], ['accept-ranges', 'bytes'], ...headers]
   });
   const t3 = performance.now();
@@ -452,7 +571,7 @@ const upload = async ({ data, filename, folder, storageActor, headers, token, fu
   };
 };
 const uploadChunk = async ({ batchId, chunk, storageActor }) => storageActor.uploadChunk({
-  batchId,
+  batch_id: batchId,
   content: [...new Uint8Array(await chunk.arrayBuffer())]
 });
 const encodeFilename = (filename) => encodeURI(filename.toLowerCase().replace(/\s/g, '-'));
@@ -511,7 +630,7 @@ const uploadSocialImage = async ({ storageUpload, publishData }) => {
   });
 };
 
-const updateTemplate = ({ template, data }) => Object.entries(data).reduce((acc, [key, value]) => acc
+const updateTemplate = ({ template, data, canisterIds }) => [...Object.entries(data), ...Object.entries(canisterIds)].reduce((acc, [key, value]) => acc
   .replaceAll(`{{DECKDECKGO_${key.toUpperCase()}}}`, value || '')
   .replaceAll(`%%DECKDECKGO_${key.toUpperCase()}%%`, value || '')
   .replaceAll(`<!-- DECKDECKGO_${key.toUpperCase()} -->`, value || ''), template);
@@ -562,11 +681,12 @@ const uploadPaths = ({ publishData, meta, folder }) => {
     pathname
   };
 };
-const initIndexHTML = async ({ publishData, updateTemplateContent, sourceFolder }) => {
+const initIndexHTML = async ({ publishData, canisterIds, updateTemplateContent, sourceFolder }) => {
   const template = await htmlTemplate$1(sourceFolder);
   const updatedTemplate = updateTemplate({
     template,
-    data: publishData
+    data: publishData,
+    canisterIds
   });
   const { attributes } = publishData;
   const attr = attributes
@@ -600,12 +720,13 @@ const uploadPublishFileIC = async ({ filename, html, actor, folder }) => {
 };
 const getAuthor = () => EnvStore.getInstance().get().author;
 
-const publishDeck = async ({ deck: deckSource }) => {
+const publishDeck = async ({ deck: deckSource, canisterIds }) => {
   const { id, data } = deckSource;
   const { meta } = data;
   // 1. Init and fill HTML
   const indexHTML = await initDeckIndexHTML({
-    deck: deckSource
+    deck: deckSource,
+    canisterIds
   });
   const { storageUpload, publishData } = await initUpload({
     indexHTML,
@@ -639,7 +760,7 @@ const publishDeck = async ({ deck: deckSource }) => {
     deck
   };
 };
-const initDeckIndexHTML = async ({ deck }) => {
+const initDeckIndexHTML = async ({ deck, canisterIds }) => {
   const publishData = await C({
     deck,
     fallbackAuthor: EnvStore.getInstance().get().author
@@ -648,6 +769,7 @@ const initDeckIndexHTML = async ({ deck }) => {
   const updateTemplateContent = ({ attr, template }) => template.replace('<!-- DECKDECKGO_DECK -->', `<deckgo-deck id="slider" embedded="true" ${attr || ''}>${slides.join('')}</deckgo-deck>`);
   const { html } = await initIndexHTML({
     publishData,
+    canisterIds,
     updateTemplateContent,
     sourceFolder: 'p'
   });
@@ -673,13 +795,14 @@ const emitDeckPublished = (deck) => {
   document.dispatchEvent($event);
 };
 
-const publishDoc = async ({ doc: docSource, config }) => {
+const publishDoc = async ({ doc: docSource, config, canisterIds }) => {
   const { id, data } = docSource;
   const { meta } = data;
   // 1. Init and fill HTML
   const indexHTML = await initDocIndexHTML({
     doc: docSource,
-    config
+    config,
+    canisterIds
   });
   const { storageUpload, publishData } = await initUpload({
     indexHTML,
@@ -713,7 +836,7 @@ const publishDoc = async ({ doc: docSource, config }) => {
     doc
   };
 };
-const initDocIndexHTML = async ({ doc, config }) => {
+const initDocIndexHTML = async ({ doc, config, canisterIds }) => {
   const { theme, socialImgPath } = config;
   const publishData = await F({
     doc,
@@ -725,6 +848,7 @@ const initDocIndexHTML = async ({ doc, config }) => {
   const updateTemplateContent = ({ attr, template }) => template.replace('<!-- DECKDECKGO_DOC -->', `<article ${attr || ''} class="deckgo-doc">${paragraphs.join('')}</article>`);
   const { html } = await initIndexHTML({
     publishData,
+    canisterIds,
     updateTemplateContent,
     sourceFolder: 'd'
   });
@@ -761,10 +885,10 @@ var __rest = (undefined && undefined.__rest) || function (s, e) {
     }
   return t;
 };
-const prepareIndexHtml = async ({ bucketUrl, publishData, metas }) => {
+const prepareIndexHtml = async ({ bucketUrl, publishData, metas, canisterIds }) => {
   const template = await htmlTemplate();
   const { photo_url } = publishData, data = __rest(publishData, ["photo_url"]);
-  let html = updateTemplate({ template, data });
+  let html = updateTemplate({ template, data, canisterIds });
   html = updatePhotoUrl({ html, photo_url });
   html = updatePostsList({
     content: html,
@@ -882,17 +1006,17 @@ const prepareSitemap = ({ bucketUrl, metas }) => {
   return siteMapTemplate([rootUrl, ...postsUrls].join(''));
 };
 
-const publishDeckMetas = async ({ owner_id, storageUpload, publishData }) => {
+const publishDeckMetas = async ({ owner_id, storageUpload, publishData, canisterIds }) => {
   t({ msg: '[list][start] decks', level: 'info' });
   const decks = await deckEntries();
   t({ msg: '[list][start] end', level: 'info' });
-  await publishMetas({ storageUpload, publishData, entries: decks });
+  await publishMetas({ storageUpload, publishData, entries: decks, canisterIds });
 };
-const publishDocMetas = async ({ owner_id, storageUpload, publishData }) => {
+const publishDocMetas = async ({ owner_id, storageUpload, publishData, canisterIds }) => {
   t({ msg: '[list][start] docs', level: 'info' });
   const docs = await docEntries();
   t({ msg: '[list][end] docs', level: 'info' });
-  await publishMetas({ storageUpload, publishData, entries: docs });
+  await publishMetas({ storageUpload, publishData, entries: docs, canisterIds });
 };
 const sortPublishMetaEntries = (entries) => entries
   .filter(({ data }) => { var _a; return ((_a = data.meta) === null || _a === void 0 ? void 0 : _a.published) === true; })
@@ -901,10 +1025,10 @@ const sortPublishMetaEntries = (entries) => entries
   dataId: id,
   meta
 }));
-const publishMetas = async ({ storageUpload, publishData, entries }) => {
+const publishMetas = async ({ storageUpload, publishData, entries, canisterIds }) => {
   const metas = sortPublishMetaEntries(entries);
   const promises = [
-    publishIndexHtml({ storageUpload, publishData, metas }),
+    publishIndexHtml({ storageUpload, publishData, metas, canisterIds }),
     publishSitemap({ storageUpload, metas }),
     publishRSS({ storageUpload, metas, publishData })
   ];
@@ -921,9 +1045,9 @@ const publishSitemap = async ({ storageUpload, metas }) => {
   const sitemap = prepareSitemap({ bucketUrl, metas });
   await uploadSitemapIC({ sitemap, actor });
 };
-const publishIndexHtml = async ({ storageUpload, publishData, metas }) => {
+const publishIndexHtml = async ({ storageUpload, publishData, metas, canisterIds }) => {
   const { bucketUrl, actor } = storageUpload;
-  const html = await prepareIndexHtml({ bucketUrl, publishData, metas });
+  const html = await prepareIndexHtml({ bucketUrl, publishData, metas, canisterIds });
   await uploadIndexHtmlIC({ html, actor });
 };
 const uploadIndexHtmlIC = async ({ html, actor }) => uploadResourceIC({
@@ -982,27 +1106,27 @@ const digestMessage = (message) => {
 
 const getKitPath = () => EnvStore.getInstance().get().kitPath;
 const sha256ToBase64String = (sha256) => btoa([...sha256].map((c) => String.fromCharCode(c)).join(''));
-const uploadResources = async ({ meta }) => {
+const uploadResources = async ({ meta, hoisted }) => {
   // 1. Get actor
   const { actor } = await getStorageActor();
   // 2. Get already uploaded assets and their respective sha256 value (if defined)
   const assetKeys = await actor.list(toNullable('resources'));
   // 3. Get list of resources - i.e. the kit
   const kit = await getKit();
-  const promises = kit.map((kit) => addKitIC({ kit, actor, meta, assetKeys }));
+  const promises = kit.map((kit) => addKitIC({ kit, actor, meta, hoisted, assetKeys }));
   await Promise.all(promises);
 };
 const updatedResource = ({ src, sha256, assetKeys }) => {
   var _a;
   const kitFullPath = src.replace(getKitPath(), '');
-  const key = assetKeys.find(({ fullPath }) => kitFullPath === fullPath);
-  const assetSha256 = sha256ToBase64String(new Uint8Array((_a = fromNullable(key.sha256)) !== null && _a !== void 0 ? _a : []));
+  const key = assetKeys.find(({ full_path }) => kitFullPath === full_path);
+  const assetSha256 = sha256ToBase64String(new Uint8Array((_a = fromNullable(key === null || key === void 0 ? void 0 : key.sha256)) !== null && _a !== void 0 ? _a : []));
   return key === undefined || sha256 === undefined || sha256 !== assetSha256;
 };
-const addDynamicKitIC = async ({ kit, actor, meta, assetKeys }) => {
+const addDynamicKitIC = async ({ kit, actor, meta, hoisted, assetKeys }) => {
   const { src, filename, mimeType, updateContent, headers } = kit;
   const content = await downloadKit(src);
-  const updatedContent = updateContent({ content, meta });
+  const updatedContent = updateContent({ content, meta, hoisted });
   const sha256 = sha256ToBase64String(new Uint8Array(await digestMessage(updatedContent)));
   if (!updatedResource({ src, sha256, assetKeys })) {
     return;
@@ -1016,12 +1140,12 @@ const addDynamicKitIC = async ({ kit, actor, meta, assetKeys }) => {
     fullPath: src.replace(getKitPath(), '')
   });
 };
-const addKitIC = async ({ kit, actor, meta, assetKeys }) => {
+const addKitIC = async ({ kit, actor, meta, hoisted, assetKeys }) => {
   const { updateContent } = kit;
   // If updateContent is defined we have to compare the sha256 value of the content that will be updated first
   // e.g. avoiding uploading the manifest at each publish
   if (updateContent !== undefined) {
-    await addDynamicKitIC({ kit, actor, meta, assetKeys });
+    await addDynamicKitIC({ kit, actor, meta, hoisted, assetKeys });
     return;
   }
   const { src, filename, mimeType, headers, sha256 } = kit;
@@ -1029,7 +1153,7 @@ const addKitIC = async ({ kit, actor, meta, assetKeys }) => {
     return;
   }
   const content = await downloadKit(src);
-  const updatedContent = updateContent ? updateContent({ content, meta }) : content;
+  const updatedContent = updateContent ? updateContent({ content, meta, hoisted }) : content;
   await uploadKit({
     filename,
     content: updatedContent,
@@ -1062,6 +1186,16 @@ const getKit = async () => {
   const toResource = (resource) => {
     const src = typeof resource === 'string' ? `${kitPath}/${resource}` : `${kitPath}/${resource.fullPath}`;
     const sha256 = typeof resource === 'string' ? undefined : resource.sha256;
+    if (src.includes('hoisted.js')) {
+      return {
+        src,
+        mimeType: 'text/javascript',
+        sha256,
+        updateContent: ({ content, hoisted: { data_canister_id, data_id } }) => content
+          .replace('{{DECKDECKGO_DATA_CANISTER_ID}}', data_canister_id)
+          .replace('{{DECKDECKGO_DATA_ID}}', data_id)
+      };
+    }
     if (src.includes('.js')) {
       return {
         src,
@@ -1099,26 +1233,46 @@ const getKit = async () => {
 };
 
 const deckPublish = async ({ deck }) => {
-  await uploadResources({ meta: deck.data.meta });
-  const { storageUpload, publishData, deck: updatedDeck } = await publishDeck({ deck });
+  const canisterIds = await getCanisterIds();
+  await uploadResources({
+    meta: deck.data.meta,
+    hoisted: Object.assign(Object.assign({}, canisterIds), { data_id: deck.id })
+  });
+  const { storageUpload, publishData, deck: updatedDeck } = await publishDeck({ deck, canisterIds });
   await publishDeckMetas({
     storageUpload,
     publishData,
-    owner_id: deck.data.owner_id
+    owner_id: deck.data.owner_id,
+    canisterIds
   });
   emitDeckPublished(updatedDeck);
   return updatedDeck;
 };
 const docPublish = async ({ doc, config }) => {
-  await uploadResources({ meta: doc.data.meta });
-  const { storageUpload, publishData, doc: updatedDoc } = await publishDoc({ doc, config });
+  const canisterIds = await getCanisterIds();
+  await uploadResources({
+    meta: doc.data.meta,
+    hoisted: Object.assign(Object.assign({}, canisterIds), { data_id: doc.id })
+  });
+  const { storageUpload, publishData, doc: updatedDoc } = await publishDoc({ doc, config, canisterIds });
   await publishDocMetas({
     storageUpload,
     publishData,
-    owner_id: doc.data.owner_id
+    owner_id: doc.data.owner_id,
+    canisterIds
   });
   emitDocPublished(updatedDoc);
   return updatedDoc;
+};
+const getCanisterIds = async () => {
+  const [{ bucketId: dataBucketId }, { bucketId: storageBucketId }] = await Promise.all([
+    getDataBucketActor(),
+    getStorageActor()
+  ]);
+  return {
+    data_canister_id: dataBucketId.toText(),
+    storage_canister_id: storageBucketId.toText()
+  };
 };
 const publishUrl = async () => {
   const { bucketId } = await getStorageActor();
@@ -1171,9 +1325,9 @@ const getFiles = async ({ folder }) => {
   const assets = await actor.list(toNullable(folder));
   const host = `https://${bucketId.toText()}.raw.ic0.app`;
   return {
-    items: assets.map(({ name, fullPath, token }) => ({
-      downloadUrl: `${host}${fullPath}?token=${token}`,
-      fullPath,
+    items: assets.map(({ name, full_path, token }) => ({
+      downloadUrl: `${host}${full_path}?token=${token}`,
+      fullPath: full_path,
       name
     })),
     nextPageToken: null
@@ -1187,7 +1341,7 @@ const deleteFile = async ({ downloadUrl, fullPath }) => {
     token = searchParams.get('token');
   }
   return actor.del({
-    fullPath,
+    full_path: fullPath,
     token: toNullable(token ? token : undefined)
   });
 };
@@ -1436,7 +1590,7 @@ const internetIdentityAuth = async () => {
   return Promise.all([idbStorage.get('delegation'), idbStorage.get('identity')]);
 };
 
-const workerPromise = import('./sync.ic.worker-299b9e88.js').then(m => m.worker);
+const workerPromise = import('./sync.ic.worker-987b1a36.js').then(m => m.worker);
 const uploadWorker = /*@__PURE__*/createWorkerProxy(workerPromise, 'stencil.sync.ic.worker', 'uploadWorker');
 
 // - we cannot use postmessage because of CORS
@@ -1477,4 +1631,4 @@ const sync = async ({ syncData, clean }) => {
   await clean(syncData);
 };
 
-export { canistersBalance, createTemplate, deckEntries, deckPublish, deckSubmitFeed, deleteDeck, deleteDoc, deleteFile, docEntries, docPublish, docSubmitFeed, getFiles, getParagraph, getSlide, getUserTemplates, publishUrl, snapshotDeck, snapshotDoc, sync, updateLanding, updateTemplate$1 as updateTemplate, updateUser, uploadFile, uploadFileIC };
+export { canistersBalance, countLikes, createTemplate, deckEntries, deckPublish, deckSubmitFeed, deleteDeck, deleteDoc, deleteFile, docEntries, docPublish, docSubmitFeed, getFiles, getLike, getParagraph, getSlide, getUserTemplates, initLikePut, likeDislike, likeKey, listInteractions, publishUrl, putInteraction, snapshotDeck, snapshotDoc, sync, toInteraction, updateLanding, updateTemplate$1 as updateTemplate, updateUser, uploadFile, uploadFileIC };

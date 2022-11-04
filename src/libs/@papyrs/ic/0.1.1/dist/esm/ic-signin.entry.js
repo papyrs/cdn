@@ -1,8 +1,8 @@
-import { h, r as registerInstance, a as createEvent, H as Host } from './index-89ae1430.js';
-import { b as signIn } from './auth.providers-b4c31f87.js';
-import './auth.constants-df89d2cd.js';
-import './actor-bbf3ae7b.js';
-import './compat-2f0363f0.js';
+import { h, r as registerInstance, a as createEvent, H as Host } from './index-ec2f5921.js';
+import { d as signIn } from './auth.providers-c7bd6728.js';
+import './auth.constants-2a5a6112.js';
+import './actor-676fbee4.js';
+import './compat-605a1ac2.js';
 
 const IconDfinity = () => (h("svg", { version: "1.1", id: "Layer_1", xmlns: "http://www.w3.org/2000/svg", width: "32", height: "23", viewBox: "0 0 880 640", style: { enableBackground: 'new 0 0 880 640' } },
   h("style", { type: "text/css" }, `.st0{fill:none;}
@@ -32,6 +32,11 @@ const IcSignin = class {
     this.inProgress = createEvent(this, "inProgress", 7);
     this.ddgSignInSuccess = createEvent(this, "ddgSignInSuccess", 7);
     this.ddgSignInError = createEvent(this, "ddgSignInError", 7);
+    this.i18n = undefined;
+    this.config = undefined;
+    this.signIn = undefined;
+    this.signInSuccess = undefined;
+    this.signInError = undefined;
     this.externalSignInState = undefined;
     this.signInInProgress = false;
   }

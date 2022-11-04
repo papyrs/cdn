@@ -1,19 +1,29 @@
-import { r as registerInstance, h } from './index-89ae1430.js';
-import { e as AnonymousIdentity } from './actor-bbf3ae7b.js';
-import { E as EnvStore, i as internetIdentityMainnet, h as createManagerActor, e as delegationIdentityExpiration } from './auth.constants-df89d2cd.js';
+import { r as registerInstance, h } from './index-ec2f5921.js';
+import { A as AnonymousIdentity } from './actor-676fbee4.js';
+import { E as EnvStore, j as internetIdentityMainnet, h as createManagerActor, e as delegationIdentityExpiration } from './auth.constants-2a5a6112.js';
 
 const IcSigninProxy = class {
   constructor(hostRef) {
     registerInstance(this, hostRef);
-    this.publicKey = undefined;
-    this.signInInProgress = false;
     this.trustedOrigin = undefined;
+    this.closeTabInterval = undefined;
     this.onSignIn = () => {
       this.tab = window.open(this.identityProviderUrl.toString(), 'idpWindow');
+      this.observeCloseTab();
     };
+    this.i18n = undefined;
+    this.config = undefined;
+    this.publicKey = undefined;
+    this.identityProviderUrl = undefined;
+    this.derivationOrigin = undefined;
+    this.signInInProgress = false;
+    this.parentOrigin = undefined;
   }
   componentWillLoad() {
-    EnvStore.getInstance().set(this.config);
+    const { derivationOrigin, managerCanisterId, localIdentityCanisterId } = this.config;
+    this.derivationOrigin = derivationOrigin;
+    // We set only what we need in this use case
+    EnvStore.getInstance().set({ managerCanisterId, localIdentityCanisterId });
     this.identityProviderUrl = new URL(EnvStore.getInstance().get().localIdentityCanisterId !== undefined
       ? `http://${EnvStore.getInstance().get().localIdentityCanisterId}.localhost:8000`
       : internetIdentityMainnet);
@@ -22,6 +32,9 @@ const IcSigninProxy = class {
   componentDidLoad() {
     // We broadcast the message because there is no caller yet. This is safe since it does not include any data exchange.
     parent.postMessage({ kind: 'papyrs-signin-ready' }, '*');
+  }
+  disconnectedCallback() {
+    this.clearCloseTabInterval();
   }
   async onMessage({ data, origin }) {
     const { kind } = data !== null && data !== void 0 ? data : {};
@@ -101,15 +114,11 @@ const IcSigninProxy = class {
    */
   onInternetIdentityReady() {
     if (!this.tab || this.signInState() !== 'ready') {
-      this.error('Authentication not ready.');
+      this.throwError('Authentication not ready.');
       return;
     }
     this.signInInProgress = true;
-    const request = {
-      kind: 'authorize-client',
-      sessionPublicKey: new Uint8Array(this.publicKey),
-      maxTimeToLive: delegationIdentityExpiration
-    };
+    const request = Object.assign({ kind: 'authorize-client', sessionPublicKey: new Uint8Array(this.publicKey), maxTimeToLive: delegationIdentityExpiration }, (this.derivationOrigin !== undefined && { derivationOrigin: this.derivationOrigin }));
     const { origin } = this.identityProviderUrl;
     this.tab.postMessage(request, origin);
   }
@@ -120,10 +129,10 @@ const IcSigninProxy = class {
   onInternetIdentityFailure({ text }) {
     var _a;
     (_a = this.tab) === null || _a === void 0 ? void 0 : _a.close();
-    this.error(text);
+    this.throwError(text);
     this.cleanUp();
   }
-  error(text) {
+  throwError(text) {
     this.parentPostMessage({
       kind: 'papyrs-signin-error',
       text
@@ -140,6 +149,7 @@ const IcSigninProxy = class {
   }
   onInternetIdentitySuccess({ delegations, userPublicKey }) {
     var _a;
+    this.clearCloseTabInterval();
     this.parentPostMessage({
       kind: 'papyrs-signin-success',
       delegations,
@@ -152,6 +162,19 @@ const IcSigninProxy = class {
   cleanUp() {
     this.trustedOrigin = undefined;
     this.publicKey = undefined;
+  }
+  observeCloseTab() {
+    this.closeTabInterval = setInterval(() => {
+      var _a;
+      if (!((_a = this.tab) === null || _a === void 0 ? void 0 : _a.closed)) {
+        return;
+      }
+      this.clearCloseTabInterval();
+      this.throwError('User interrupted sign in.');
+    }, 500);
+  }
+  clearCloseTabInterval() {
+    clearInterval(this.closeTabInterval);
   }
   signInState() {
     if (this.publicKey === undefined ||

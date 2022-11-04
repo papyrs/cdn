@@ -1,12 +1,14 @@
-import { r as registerInstance, a as createEvent, h } from './index-89ae1430.js';
-import { E as Ed25519KeyIdentity, A as AuthClient, a as Delegation, D as DelegationChain, b as DelegationIdentity, c as createStore, e as setMany } from './compat-2f0363f0.js';
-import './actor-bbf3ae7b.js';
+import { r as registerInstance, a as createEvent, h } from './index-ec2f5921.js';
+import { E as Ed25519KeyIdentity, b as Delegation, D as DelegationChain, a as DelegationIdentity, c as createStore, e as setMany } from './compat-605a1ac2.js';
+import './actor-676fbee4.js';
 
 const IcSigninProxy = class {
   constructor(hostRef) {
     registerInstance(this, hostRef);
+    this.signInSuccess = createEvent(this, "signInSuccess", 7);
     this.signInError = createEvent(this, "signInError", 7);
     this.ed25519Key = undefined;
+    this.signInProxyUrl = undefined;
   }
   async onMessage({ data, origin }) {
     const { kind } = data !== null && data !== void 0 ? data : {};
@@ -49,9 +51,7 @@ const IcSigninProxy = class {
     }
     const { delegation } = this.decode(message);
     await this.saveToIdb(delegation);
-    // TODO: remove - just for test
-    const authClient = await AuthClient.create();
-    console.log('Is signed in?', await authClient.isAuthenticated());
+    this.signInSuccess.emit();
   }
   decode({ delegations: messageDelegations, userPublicKey }) {
     const delegations = messageDelegations.map((signedDelegation) => ({
